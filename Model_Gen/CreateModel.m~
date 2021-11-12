@@ -1,0 +1,26 @@
+function [D,C,F,G] = CreateModel(NLinks)
+
+%This function creates the model of a robot with NLinks number of
+%rotational joints. No prismatic joints can be included.
+
+
+%define symbolic variables
+syms al1 al2 al3 al4 al5 al6 al7 alpha1 alpha2 alpha3 alpha4 alpha5 alpha6 alpha7 dl1 dl2 dl3 dl4 dl5 dl6 dl7 acl1 acl2 acl3 acl4 acl5 acl6 acl7 dcl1 dcl2 dcl3 dcl4 dcl5 dcl6 dcl7
+syms tau1 tau2 tau3 tau4 tau5 tau6 tau7
+
+%tau should later be seen as an input but for testing purposes it is
+%incorperated here
+tau = [tau1; tau2; tau3; tau4; tau5; tau6; tau7];
+tau = tau(1:NLinks);
+
+[DH_matrix] = CreateDH_matrix2(NLinks);
+[A,AC,theta] = CreateA_matrices(DH_matrix,NLinks);
+[T,TC] = CreateT_matrices(NLinks,A,AC);
+[JCA] = CreateJacobianAngular(NLinks,T);
+[JCL] = CreateJacobianLinear(NLinks,TC,T);
+[D,MM] = CreateInertiaMatrix(NLinks,T,JCA,JCL);
+[Christoffel] = CreateChristoffel(NLinks,D,theta);
+[C,dtheta] = CreateCentrifugalCoriolis(NLinks,Christoffel);
+[F] = CreateDampingMatrix(NLinks,MM);
+[G] = CreatePotentialMatrix(NLinks,MM,TC,theta);
+%[ddq] = Createddq(D,C,G,F,dtheta,tau);
